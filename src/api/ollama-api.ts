@@ -2,6 +2,10 @@ const BASE_URL = 'http://localhost:11434'
 const CHAT_ENDPOINT = '/api/chat'
 const MODEL_LIST_ENDPOINT = '/api/tags'
 
+const JSON_PROMPT = 'Respond with valid JSON.'
+
+const NO_SYSTEM_MESSAGE = ''
+
 export interface Message {
     role: 'user' | 'assistant' | 'system',
     content: string,
@@ -12,30 +16,22 @@ interface PostChatOptions {
     jsonMode?: boolean
 }
 
-function appendJSONPrompt(messages: Message[]): Message[] {
-    if (messages.length === 0) {
-        return messages
-    }
-
-    const lastMessage = messages[messages.length - 1]
-    return [
-        ...messages.slice(0, messages.length - 2),
-        {
-            ...lastMessage,
-            content: lastMessage.content + ' Respond with valid JSON.'
-        }
-    ]
-}
-
 export async function postChat(
     model: string,
     messages: Message[],
     output: (messageContent: string, isFinished: boolean) => void,
     options?: PostChatOptions
 ) {
+    var systemMessage: Message = {
+        role: 'system',
+        content: NO_SYSTEM_MESSAGE
+    }
+    if (options?.jsonMode) {
+        systemMessage = {...systemMessage, content: JSON_PROMPT}
+    }
     const payload = {
         model,
-        messages: options?.jsonMode ? appendJSONPrompt(messages) : messages,
+        messages: [systemMessage, ...messages],
         stream: true,
         format: options?.jsonMode ? 'json' : null
     }
@@ -67,6 +63,5 @@ export async function postChat(
 export async function getModels(): Promise<string[]> {
     const response = await fetch(BASE_URL + MODEL_LIST_ENDPOINT)
     const data = await response.json()
-
     return (data.models as { name: string }[]).map(model => model.name)
 }

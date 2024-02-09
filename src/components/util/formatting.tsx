@@ -1,12 +1,6 @@
 import reactStringReplace from 'react-string-replace'
-import styled from "styled-components"
-import { CopyBlock } from 'react-code-blocks'
 import { InlineCode } from '../inline-code/inline-code'
-
-const CodeBlockContainer = styled.div`
-    background-color: #FAFAFA;
-    margin: 16px 0;
-`
+import { CustomCodeBlock } from '../code-block/code-block.component'
 
 export function getCodeLanguage(message: string): string {
     const lowerCased = message.toLocaleLowerCase()
@@ -33,16 +27,16 @@ export function format(message: string): React.ReactNode[] {
     }
 
     // Format code blocks first
-    var formattedMessage = reactStringReplace(formattedMessageString.trim(), /```([\s\S]*?)```/g, (match) => (
-        <CodeBlockContainer>
-            <CopyBlock
+    var formattedMessage = reactStringReplace(formattedMessageString.trim(), /```([\s\S]*?)```/g, (match) => {
+        return (
+            <CustomCodeBlock
                 text={match.trim()}
                 language={getCodeLanguage(message)}
                 showLineNumbers
                 wrapLongLines
             />
-        </CodeBlockContainer>
-    ))
+        )
+    })
 
     // Then format inline code
     formattedMessage = reactStringReplace(formattedMessage, /`(.*?)`/, (match) => (
@@ -50,16 +44,29 @@ export function format(message: string): React.ReactNode[] {
     ))
 
     // Then format JSON
-    formattedMessage = reactStringReplace(formattedMessage, /{([\s\S]*)}/g, (match) => (
-        <CodeBlockContainer>
-            <CopyBlock
-                text={'{\n'+match.trim()+'\n}'}
-                language={getCodeLanguage(message)}
+    formattedMessage = reactStringReplace(formattedMessage, /{([\s\S]*)}/g, (match) => {
+        const jsonString = '{'+match.trim()+'}'
+        var indentedJson = jsonString
+        try {
+            indentedJson = JSON.stringify(JSON.parse(jsonString), null, 2)
+        } catch {
+            // no op
+        }
+        return (
+            <CustomCodeBlock
+                text={indentedJson}
+                language={'json'}
                 showLineNumbers
                 wrapLongLines
             />
-        </CodeBlockContainer>
-    ))
+        )
+    })
+
+    // Eveything else as markdown
+    // TODO
+    // formattedMessage = reactStringReplace(formattedMessage, /(.*|\n.)/g, (match) => {
+    //     return <Markdown>{match.split('\n')[0]}</Markdown>
+    // })
 
     // Format line breaks
     formattedMessage = reactStringReplace(formattedMessage, '\n', () => <br />)

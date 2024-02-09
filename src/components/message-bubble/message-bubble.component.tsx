@@ -1,7 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react"
+import Markdown from "react-markdown"
 import styled from "styled-components"
 import { format } from "../util/formatting"
 import { MessageLoading } from "../message-loading/message-loading.component"
+import { CopyButton } from "../copy-button/copy-button.component"
 
 const Container = styled.div`
     position: relative;
@@ -45,27 +47,8 @@ interface MessageBubbleProps {
 }
 
 export const MessageBubble = ({ message, role, isPartial, isLast, onStopClicked, onRetryClicked }: MessageBubbleProps) => {
-    const [hasCopiedToClipboard, setHasCopiedToClipboard] = useState(false)
-
     const isAssistant = role === "assistant"
     const messageHasContent = useMemo(() => message.trim() !== '', [message])
-
-    useEffect(() => {
-        if (!hasCopiedToClipboard) {
-            return
-        }
-
-        const timeout = setTimeout(() => {
-            setHasCopiedToClipboard(false)
-        }, 800)
-
-        return () => clearTimeout(timeout)
-    }, [hasCopiedToClipboard, setHasCopiedToClipboard])
-
-    const onCopyClicked = useCallback(() => {
-        navigator.clipboard.writeText(message)
-        setHasCopiedToClipboard(true)
-    }, [setHasCopiedToClipboard])
 
     return (
         <Container>
@@ -74,10 +57,7 @@ export const MessageBubble = ({ message, role, isPartial, isLast, onStopClicked,
             </Bubble>
             {isAssistant && !isPartial && messageHasContent && isLast && (
                 <ButtonsContainer>
-                    <ActionButton onClick={onCopyClicked}>
-                        <div>📋</div>
-                        <TickButtonContainer show={hasCopiedToClipboard}>✅</TickButtonContainer>
-                    </ActionButton>
+                    <CopyButton copyText={message} />
                     <ActionButton onClick={onRetryClicked}>🔄</ActionButton>
                 </ButtonsContainer>
             )}

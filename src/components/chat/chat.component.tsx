@@ -1,8 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useRef, useState, useContext } from "react"
 import styled from 'styled-components'
 import { MessageBubble } from "../message-bubble/message-bubble.component"
 import { UserMessageInput } from "../user-message-input/user-message-input.component"
+import { ChatOptions } from "../chat-options/chat-options"
 import { Message, postChat } from "../../api/ollama-api"
+import { ErrorContext, ResetContext } from "../../App"
 
 const Container = styled.div`
     display: flex;
@@ -39,17 +41,6 @@ const UserMessageContainer = styled.div`
     // box-shadow: 0px -2px 2px rgba(50, 50, 50, 0.2);
 `
 
-const OptionsContainer = styled.div`
-    display: flex;
-    font-size: 12px;
-    color: grey;
-    justify-content: flex-end;
-`
-
-const Checkbox = styled.input`
-
-`
-
 interface ChatProps {
     model: string
 }
@@ -57,9 +48,15 @@ interface ChatProps {
 let stopFlag = false
 
 export const Chat = ({ model }: ChatProps) => {
+    const { setError } = useContext(ErrorContext)
+    const resetTime = useContext(ResetContext)
     const [messages, setMessages] = useState<Message[]>([])
     const [useJsonMode, setUseJsonMode] = useState(false)
     const scrollRef = useRef(null)
+
+    useEffect(() => {
+        setMessages([])
+    }, [resetTime, setMessages])
 
     useEffect(() => {
         window.scrollTo(0, 1000)
@@ -71,18 +68,22 @@ export const Chat = ({ model }: ChatProps) => {
             setMessages([...messages, { role: 'assistant', content: '' }])
 
             var shouldStop = false
-            await postChat(model, messages, ((messageContent, isFinished) => {
-                if (shouldStop) {
-                    return
-                }
+            try {
+                await postChat(model, messages, ((messageContent, isFinished) => {
+                    if (shouldStop) {
+                        return
+                    }
 
-                const isPartial = !stopFlag && !isFinished
-                setMessages([...messages, { role: 'assistant', content: messageContent, isPartial: isPartial }])
-                shouldStop = stopFlag
-            }), { jsonMode: useJsonMode })
+                    const isPartial = !stopFlag && !isFinished
+                    setMessages([...messages, { role: 'assistant', content: messageContent, isPartial: isPartial }])
+                    shouldStop = stopFlag
+                }), { jsonMode: useJsonMode })
+            } catch {
+                setError(true)
+            }
         }
         run()
-    }, [setMessages, model, useJsonMode])
+    }, [setMessages, model, useJsonMode, setError])
 
     const onMessageSubmitted = useCallback((newMessage: string) => {
         const newMessages: Message[] = [...messages, { role: 'user', content: newMessage }]
@@ -141,10 +142,7 @@ export const Chat = ({ model }: ChatProps) => {
                     onMessageStop={onMessageStopped}
                     showStop={isStreaming}
                 />
-                <OptionsContainer>
-                    <p>JSON mode</p>
-                    <Checkbox onChange={onJsonCheckboxPressed} type="checkbox" />
-                </OptionsContainer>
+                <ChatOptions onJsonCheckboxPressed={onJsonCheckboxPressed} jsonModeEnabled={useJsonMode} />
             </UserMessageContainer>
         </>
     )

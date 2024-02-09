@@ -1,5 +1,6 @@
-import React, { useCallback } from "react"
+import React, { useCallback, useContext } from "react"
 import styled from 'styled-components'
+import { ErrorContext } from "../../App"
 
 const AVAILABLE_MODELS = [
     "llama2:13b-chat",
@@ -31,10 +32,19 @@ interface ModelSelectorProps {
 }
 
 export const ModelSelector = ({ selectedModel, allModels, onModelChanged }: ModelSelectorProps) => {
+    const { error } = useContext(ErrorContext)
     const onChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
         e.preventDefault()
         onModelChanged(e.target.value)
     }, [onModelChanged])
+
+    if (error) {
+        return (
+            <Container>
+                <LoadingDiv>Error loading models</LoadingDiv>
+            </Container>
+        )
+    }
 
     return (
         <Container>
