@@ -47,6 +47,10 @@ const NewChatButton = styled.div`
   border-radius: 8px;
   margin-left: 16px;
   font-size: 38px;
+
+  &:hover {
+    background-color: grey;
+  }
 `
 
 const NewChatButtonContent = styled.div`
