@@ -35,6 +35,8 @@ const ChatContainer = styled.div`
   flex: 1;
 `
 
+const DEFAULT_MODEL = 'llama2:13b-chat'
+
 function App() {
   const [allModels, setAllModels] = useState<string[]>([])
   const [selectedModel, setSelectedModel] = useState<string | null>(null)
@@ -42,8 +44,13 @@ function App() {
   useEffect(() => {
     const run = async () => {
       const models = await getModels()
+      console.log(models)
       setAllModels(models)
-      setSelectedModel(models[0])
+      if (models.includes(DEFAULT_MODEL)) {
+        setSelectedModel(DEFAULT_MODEL)
+      } else {
+        setSelectedModel(models[0])
+      }
     }
     run()
   }, [setAllModels, setSelectedModel])
@@ -53,7 +60,7 @@ function App() {
       <Container>
         <ModelSelectorContainer>
           <h1>Ollama Chat</h1>
-          <ModelSelector allModels={allModels} onModelChanged={setSelectedModel} />
+          <ModelSelector selectedModel={selectedModel} allModels={allModels} onModelChanged={setSelectedModel} />
         </ModelSelectorContainer>
         {allModels.length > 0 && !!selectedModel && (
           <ChatContainer>

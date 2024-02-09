@@ -25,11 +25,12 @@ const LoadingDiv = styled.div`
 `
 
 interface ModelSelectorProps {
+    selectedModel: string | null
     allModels: string[]
     onModelChanged: (model: string) => void
 }
 
-export const ModelSelector = ({ allModels, onModelChanged }: ModelSelectorProps) => {
+export const ModelSelector = ({ selectedModel, allModels, onModelChanged }: ModelSelectorProps) => {
     const onChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
         e.preventDefault()
         onModelChanged(e.target.value)
@@ -37,10 +38,16 @@ export const ModelSelector = ({ allModels, onModelChanged }: ModelSelectorProps)
 
     return (
         <Container>
-            {allModels.length === 0 && <LoadingDiv>Loading models...</LoadingDiv>}
+            {!selectedModel || allModels.length === 0 && <LoadingDiv>Loading models...</LoadingDiv>}
             <StyledSelect onChange={onChange}>
                 {allModels.map(model => (
-                    <option key={model} value={model}>{model}</option>
+                    <option
+                        key={model}
+                        value={model}
+                        selected={selectedModel === model}
+                    >
+                        {model}
+                    </option>
                 ))}
             </StyledSelect>
         </Container>
