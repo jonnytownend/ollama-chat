@@ -1,4 +1,4 @@
-import React, { useMemo } from "react"
+import React, { useCallback, useEffect, useMemo, useState } from "react"
 import styled from "styled-components"
 import { format } from "../util/formatting"
 import { MessageLoading } from "../message-loading/message-loading.component"
@@ -21,9 +21,18 @@ const ButtonsContainer = styled.div`
     padding-top: 4px;
 `
 
-const RetryButton = styled.div`
+const ActionButton = styled.div`
+    position: relative;
     cursor: pointer;
-    font-size: 18px;
+    font-size: 20px;
+    margin-left: 8px;
+`
+
+const TickButtonContainer = styled.div<{ show: boolean }>`
+    position: absolute;
+    top: 0;
+    opacity: ${p => p.show ? 1 : 0};
+    transition: opacity 0.5s;
 `
 
 interface MessageBubbleProps {
@@ -36,8 +45,27 @@ interface MessageBubbleProps {
 }
 
 export const MessageBubble = ({ message, role, isPartial, isLast, onStopClicked, onRetryClicked }: MessageBubbleProps) => {
+    const [hasCopiedToClipboard, setHasCopiedToClipboard] = useState(false)
+
     const isAssistant = role === "assistant"
     const messageHasContent = useMemo(() => message.trim() !== '', [message])
+
+    useEffect(() => {
+        if (!hasCopiedToClipboard) {
+            return
+        }
+
+        const timeout = setTimeout(() => {
+            setHasCopiedToClipboard(false)
+        }, 800)
+
+        return () => clearTimeout(timeout)
+    }, [hasCopiedToClipboard, setHasCopiedToClipboard])
+
+    const onCopyClicked = useCallback(() => {
+        navigator.clipboard.writeText(message)
+        setHasCopiedToClipboard(true)
+    }, [setHasCopiedToClipboard])
 
     return (
         <Container>
@@ -46,7 +74,11 @@ export const MessageBubble = ({ message, role, isPartial, isLast, onStopClicked,
             </Bubble>
             {isAssistant && !isPartial && messageHasContent && isLast && (
                 <ButtonsContainer>
-                    <RetryButton onClick={onRetryClicked}>🔄</RetryButton>
+                    <ActionButton onClick={onCopyClicked}>
+                        <div>📋</div>
+                        <TickButtonContainer show={hasCopiedToClipboard}>✅</TickButtonContainer>
+                    </ActionButton>
+                    <ActionButton onClick={onRetryClicked}>🔄</ActionButton>
                 </ButtonsContainer>
             )}
         </Container>
