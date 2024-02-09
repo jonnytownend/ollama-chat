@@ -1,79 +1,54 @@
-import React from "react"
-import reactStringReplace from 'react-string-replace'
-import { CopyBlock } from 'react-code-blocks'
+import React, { useMemo } from "react"
 import styled from "styled-components"
+import { format } from "../util/formatting"
+import { MessageLoading } from "../message-loading/message-loading.component"
 
-const Container = styled.div<{ isAssistant: boolean }>`
+const Container = styled.div`
     position: relative;
-    padding: 16px;
+`
+
+const Bubble = styled.div<{ isAssistant: boolean }>`
+    padding: 24px;
     padding-right: 24px;
-    background-color: ${p => p.isAssistant ? 'lightblue' : 'lightgreen'};
+    background-color: ${p => p.isAssistant ? '#E6F7FF' : '#F0F0F0'};
     border-radius: 8px;
     margin-left: ${p => p.isAssistant ? 32 : 0}px;
 `
 
-const StopButton = styled.div`
-    position: absolute;
+const ButtonsContainer = styled.div`
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 4px;
+`
+
+const RetryButton = styled.div`
     cursor: pointer;
-    width: 10px;
-    height: 10px;
-    right: 16px;
-    bottom: 16px;
-    background-color: black;
-`
-
-const CodeBlockContainer = styled.div`
-    background-color: #FAFAFA;
-    margin: 16px 0;
-`
-
-const StyledInlineCode = styled.code`
-    color: red;
+    font-size: 18px;
 `
 
 interface MessageBubbleProps {
     message: string
     role: 'user' | 'assistant' | 'system'
+    isPartial?: boolean
+    isLast?: boolean
     onStopClicked?: () => void
+    onRetryClicked?: () => void
 }
 
-function getCodeLanguage(message: string): string | null {
-    const lowerCased = message.toLocaleLowerCase()
-    if (lowerCased.includes('javascript')) {
-        return 'javascript'
-    } else if (lowerCased.includes('swift')) {
-        return 'swift'
-    }
+export const MessageBubble = ({ message, role, isPartial, isLast, onStopClicked, onRetryClicked }: MessageBubbleProps) => {
+    const isAssistant = role === "assistant"
+    const messageHasContent = useMemo(() => message.trim() !== '', [message])
 
-    return null
-}
-
-export const MessageBubble = ({ message, role, onStopClicked }: MessageBubbleProps) => {
-    var formattedMessageString = message
-    
-    // Add closing code backticks if there are none
-    if (formattedMessageString.split('```').length % 2 == 0) {
-        formattedMessageString += '```'
-    }
-
-    // Format inline code
-    var formattedMessage = reactStringReplace(formattedMessageString.trim(), /[ |.]`(.*?)`[ |.]/, (match) => (
-        <StyledInlineCode>{` ${match} `}</StyledInlineCode>
-    ))
-
-    // Format code blocks
-    formattedMessage = reactStringReplace(formattedMessage, /```([\s\S]*?)```/g, (match) => (
-        <CodeBlockContainer>
-            <CopyBlock text={match.trim()} language={getCodeLanguage(message) ?? 'javascript'} showLineNumbers wrapLongLines />
-        </CodeBlockContainer>
-    ))
-
-    // Format line breaks
-    formattedMessage = reactStringReplace(formattedMessage, '\n', () => <br />)
     return (
-        <Container isAssistant={role === "assistant"}>
-            {message.trim() === '' ? '...' : formattedMessage}
-            {role === 'assistant' && <StopButton onClick={onStopClicked} />}
+        <Container>
+            <Bubble isAssistant={isAssistant}>
+                {isAssistant && !messageHasContent ? <MessageLoading /> : format(message)}
+            </Bubble>
+            {isAssistant && !isPartial && messageHasContent && isLast && (
+                <ButtonsContainer>
+                    <RetryButton onClick={onRetryClicked}>🔄</RetryButton>
+                </ButtonsContainer>
+            )}
         </Container>
     )
 }

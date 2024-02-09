@@ -1,17 +1,22 @@
-import React, { useCallback, useEffect, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import styled from 'styled-components'
 import { MessageBubble } from "../message-bubble/message-bubble.component"
 import { UserMessageInput } from "../user-message-input/user-message-input.component"
-import { Message, postChat } from "../api/ollama-api"
+import { Message, postChat } from "../../api/ollama-api"
 
 const Container = styled.div`
     display: flex;
     flex: 1;
     flex-direction: column;
+    margin-bottom: 32px;
 `
 
 const MessagesContainer = styled.div`
 
+`
+
+const EmptyState = styled.div`
+    color: grey;
 `
 
 const MessageContainer = styled.div`
@@ -19,10 +24,29 @@ const MessageContainer = styled.div`
 `
 
 const Spacer = styled.div`
-    flex: 1;
+    height: 100px;
 `
 
 const UserMessageContainer = styled.div`
+    position: fixed;
+    padding: 24px;
+    padding-bottom: 32px;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 800px;
+    background-color: white;
+    // box-shadow: 0px -2px 2px rgba(50, 50, 50, 0.2);
+`
+
+const OptionsContainer = styled.div`
+    display: flex;
+    font-size: 12px;
+    color: grey;
+    justify-content: flex-end;
+`
+
+const Checkbox = styled.input`
 
 `
 
@@ -30,36 +54,99 @@ interface ChatProps {
     model: string
 }
 
+let stopFlag = false
+
 export const Chat = ({ model }: ChatProps) => {
     const [messages, setMessages] = useState<Message[]>([])
+    const [useJsonMode, setUseJsonMode] = useState(false)
+    const scrollRef = useRef(null)
+
+    useEffect(() => {
+        window.scrollTo(0, 1000)
+    }, [messages])
+
+    const postMessages = useCallback((messages: Message[]) => {
+        stopFlag = false
+        const run = async () => {
+            setMessages([...messages, { role: 'assistant', content: '' }])
+
+            var shouldStop = false
+            await postChat(model, messages, ((messageContent, isFinished) => {
+                if (shouldStop) {
+                    return
+                }
+
+                const isPartial = !stopFlag && !isFinished
+                setMessages([...messages, { role: 'assistant', content: messageContent, isPartial: isPartial }])
+                shouldStop = stopFlag
+            }), { jsonMode: useJsonMode })
+        }
+        run()
+    }, [setMessages, model, useJsonMode])
 
     const onMessageSubmitted = useCallback((newMessage: string) => {
         const newMessages: Message[] = [...messages, { role: 'user', content: newMessage }]
         setMessages(newMessages)
-        const run = async () => {
-            setMessages([...newMessages, { role: 'assistant', content: '' }])
-            await postChat(model, newMessages, () => false, (messageContent => {
-                setMessages([...newMessages, { role: 'assistant', content: messageContent }])
-            }))
+        postMessages(newMessages)
+    }, [model, messages, setMessages, postMessages])
+
+    const onMessageStopped = useCallback(() => {
+        stopFlag = true
+    }, [messages, setMessages])
+
+    const onRetryLastMessage = useCallback(() => {
+        const previousMessages = messages.slice(0, messages.length - 1)
+        setMessages(previousMessages)
+        postMessages(previousMessages)
+    }, [messages, setMessages])
+
+    const onJsonCheckboxPressed = useCallback(() => {
+        setUseJsonMode(!useJsonMode)
+    }, [useJsonMode, setUseJsonMode])
+
+    const isStreaming = useMemo(() => {
+        if (messages.length == 0) {
+            return false
         }
 
-        run()
-    }, [model, messages, setMessages])
+        return messages[messages.length - 1].isPartial ?? false
+    }, [messages])
 
     return (
-        <Container>
-            <MessagesContainer>
-                {messages.map(message => (
-                    <MessageContainer>
-                        <MessageBubble message={message.content} role={message.role} />
-                    </MessageContainer>
-                ))}
-            </MessagesContainer>
-            <Spacer />
+        <>
+            <Container>
+                <MessagesContainer>
+                    {messages.length == 0 && (
+                        <EmptyState>Send a message to start.</EmptyState>
+                    )}
+                    {messages.map((message, index) => (
+                        <MessageContainer>
+                            <div ref={scrollRef}>
+                                <MessageBubble
+                                    message={message.content}
+                                    role={message.role}
+                                    isPartial={message.isPartial}
+                                    isLast={index == messages.length - 1}
+                                    onRetryClicked={onRetryLastMessage}
+                                />
+                            </div>
+                        </MessageContainer>
+                    ))}
+                </MessagesContainer>
+                <Spacer />
+            </Container>
             <UserMessageContainer>
-                <UserMessageInput onMessageSubmit={onMessageSubmitted} />
+                <UserMessageInput
+                    onMessageSubmit={onMessageSubmitted}
+                    onMessageStop={onMessageStopped}
+                    showStop={isStreaming}
+                />
+                <OptionsContainer>
+                    <p>JSON mode</p>
+                    <Checkbox onChange={onJsonCheckboxPressed} type="checkbox" />
+                </OptionsContainer>
             </UserMessageContainer>
-        </Container>
+        </>
     )
 }
 
