@@ -12,6 +12,21 @@ interface PostChatOptions {
     jsonMode?: boolean
 }
 
+function appendJSONPrompt(messages: Message[]): Message[] {
+    if (messages.length === 0) {
+        return messages
+    }
+
+    const lastMessage = messages[messages.length - 1]
+    return [
+        ...messages.slice(0, messages.length - 2),
+        {
+            ...lastMessage,
+            content: lastMessage.content + ' Respond with valid JSON.'
+        }
+    ]
+}
+
 export async function postChat(
     model: string,
     messages: Message[],
@@ -20,7 +35,7 @@ export async function postChat(
 ) {
     const payload = {
         model,
-        messages,
+        messages: options?.jsonMode ? appendJSONPrompt(messages) : messages,
         stream: true,
         format: options?.jsonMode ? 'json' : null
     }
