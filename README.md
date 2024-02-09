@@ -1,6 +1,6 @@
 # Ollama Chat
 
-UI to interact with LLMs from [ollama.ai](https://ollama.ai/). Includes basic code formatting (and eventually lots of other types of formatting!)
+UI to interact with locally-running LLMs from [ollama.ai](https://ollama.ai/). Includes basic code formatting (and eventually lots of other types of formatting!)
 
 This repository is a work in progress.
 
