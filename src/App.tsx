@@ -4,6 +4,7 @@ import { Chat } from './components/chat/chat.component'
 import { ModelSelector } from './components/model-selector/model-selector.component';
 import { getModels } from "./api/ollama-api"
 import { OllamaAppError } from './components/ollama-app-error/ollama-app-error.component';
+import { OllamaLogo } from './components/ollama-logo/ollama-logo.component';
 
 const WindowContainer = styled.div`
   position: absolute;
@@ -119,7 +120,8 @@ function App() {
       <Container>
         <ModelSelectorContainer>
           <TitleContainer>
-            <h1>Ollama Chat</h1>
+            <OllamaLogo />
+            <h1 style={{ marginLeft: 16 }}>Ollama Chat</h1>
             <NewChatButton onClick={resetButtonPressed}>
               <NewChatButtonContent>
                 +

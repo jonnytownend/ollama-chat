@@ -1,9 +1,15 @@
 import styled from "styled-components"
+import { OLLAMA_AI_URL } from "../../constants"
+
+const Container = styled.div`
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: grey;
+`
 
 const OptionsContainer = styled.div`
     display: flex;
-    font-size: 12px;
-    color: grey;
     justify-content: flex-end;
 `
 
@@ -17,8 +23,11 @@ interface ChatOptionsProps {
 }
 
 export const ChatOptions = ({ jsonModeEnabled, onJsonCheckboxPressed }: ChatOptionsProps ) => (
-    <OptionsContainer>
-        <p>JSON mode</p>
-        <Checkbox onChange={onJsonCheckboxPressed} type="checkbox" checked={jsonModeEnabled} />
-    </OptionsContainer>
+    <Container>
+        <p>Visit <a href={OLLAMA_AI_URL} style={{ color: 'grey' }}>Ollama.ai</a> </p>
+        <OptionsContainer>
+            <p>JSON mode</p>
+            <Checkbox onChange={onJsonCheckboxPressed} type="checkbox" checked={jsonModeEnabled} />
+        </OptionsContainer>
+    </Container>
 )
