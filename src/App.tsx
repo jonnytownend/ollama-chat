@@ -5,6 +5,7 @@ import { ModelSelector } from './components/model-selector/model-selector.compon
 import { getModels } from "./api/ollama-api"
 import { OllamaAppError } from './components/ollama-app-error/ollama-app-error.component';
 import { OllamaLogo } from './components/ollama-logo/ollama-logo.component';
+import { DraggableHeader } from './components/draggable-header/draggable-header.component';
 
 const WindowContainer = styled.div`
   position: absolute;
@@ -114,9 +115,10 @@ function App() {
   const resetButtonPressed = useCallback(() => {
     setResetTime(new Date())
   }, [setResetTime])
-
+  
   return (
     <WindowContainer>
+      <DraggableHeader />
       <Container>
         <ModelSelectorContainer>
           <TitleContainer>
