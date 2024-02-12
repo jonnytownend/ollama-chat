@@ -24,7 +24,7 @@ interface ChatOptionsProps {
 
 export const ChatOptions = ({ jsonModeEnabled, onJsonCheckboxPressed }: ChatOptionsProps ) => (
     <Container>
-        <p>Visit <a href={OLLAMA_AI_URL} style={{ color: 'grey' }}>Ollama.ai</a> </p>
+        <p>This is an unofficial companion app. It is not affiliated with <a href={OLLAMA_AI_URL} style={{ color: 'grey' }}>Ollama.ai</a>.</p>
         <OptionsContainer>
             <p>JSON mode</p>
             <Checkbox onChange={onJsonCheckboxPressed} type="checkbox" checked={jsonModeEnabled} />
