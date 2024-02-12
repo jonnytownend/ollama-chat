@@ -1,10 +1,23 @@
 {
   "name": "ollama-chat",
   "version": "0.1.0",
-  "main": "electron-main.js",
+  "description": "Unofficial UI for Ollama.ai",
+  "author": "Jonny Townend",
+  "homepage": "./",
+  "main": "./public/electron.js",
   "build": {
     "appId": "com.jonnytownend.ollamachat",
-    "productName": "Ollama Chat"
+    "productName": "Ollama Chat",
+    "mac": {
+      "target": "dmg"
+    },
+    "files": [
+      "build/**/*",
+      "node_modules/**/*"
+    ],
+    "directories": {
+      "buildResources": "assets"
+    }
   },
   "dependencies": {
     "@testing-library/jest-dom": "^5.17.0",
@@ -33,7 +46,7 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "electron-dev": "electron .",
-    "electron-dist": "electron-builder"
+    "electron-dist": "electron-builder -c.extraMetadata.main=build/electron.js"
   },
   "eslintConfig": {
     "extends": [
