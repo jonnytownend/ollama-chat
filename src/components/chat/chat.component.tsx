@@ -47,12 +47,14 @@ interface ChatProps {
 
 let stopFlag = false
 
+const USER_MESSAGE_PADDING = 32
+
 export const Chat = ({ model }: ChatProps) => {
     const { setError } = useContext(ErrorContext)
     const resetTime = useContext(ResetContext)
     const [messages, setMessages] = useState<Message[]>([])
     const [useJsonMode, setUseJsonMode] = useState(false)
-    const scrollRef = useRef(null)
+    const [userMessageMaxWidth, setUserMessageMaxWidth] = useState(window.innerWidth - (2 * USER_MESSAGE_PADDING))
 
     useEffect(() => {
         setMessages([])
@@ -61,6 +63,14 @@ export const Chat = ({ model }: ChatProps) => {
     useEffect(() => {
         window.scrollTo(0, 1000)
     }, [messages])
+
+    useEffect(() => {
+        const listener = () => {
+            setUserMessageMaxWidth(window.innerWidth - (2 * USER_MESSAGE_PADDING))
+        }
+        window.addEventListener('resize', listener)
+        return () => window.removeEventListener('resize', listener)
+    }, [setUserMessageMaxWidth])
 
     const postMessages = useCallback((messages: Message[]) => {
         stopFlag = false
@@ -122,7 +132,7 @@ export const Chat = ({ model }: ChatProps) => {
                     )}
                     {messages.map((message, index) => (
                         <MessageContainer>
-                            <div ref={scrollRef}>
+                            <div>
                                 <MessageBubble
                                     message={message.content}
                                     role={message.role}
@@ -136,7 +146,7 @@ export const Chat = ({ model }: ChatProps) => {
                 </MessagesContainer>
                 <Spacer />
             </Container>
-            <UserMessageContainer>
+            <UserMessageContainer style={{ maxWidth: userMessageMaxWidth }}>
                 <UserMessageInput
                     onMessageSubmit={onMessageSubmitted}
                     onMessageStop={onMessageStopped}
