@@ -35,6 +35,7 @@ export async function postChat(
         stream: true,
         format: options?.jsonMode ? 'json' : null
     }
+    console.log('Getting a first response from Ollama API...')
     const response = await fetch(BASE_URL + CHAT_ENDPOINT, {
         method: 'POST',
         body: JSON.stringify(payload),
@@ -48,15 +49,15 @@ export async function postChat(
 
     var messageContent = ''
     while (true) {
-        const { value, done } = await reader.read();
-        if (done) {
-            output(messageContent, true)
-            break
-        }
+        console.log('Fetching from Ollama API...')
+        const { value } = await reader.read();
         const rawData = decoder.decode(value, { stream: true });
         const data =  JSON.parse(rawData)
         messageContent += data.message.content
-        output(messageContent, false)
+        output(messageContent, data.done)
+        if (data.done) {
+            break
+        }
     }
 }
 
