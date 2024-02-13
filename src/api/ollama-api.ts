@@ -19,7 +19,7 @@ interface PostChatOptions {
 export async function postChat(
     model: string,
     messages: Message[],
-    output: (messageContent: string, isFinished: boolean) => void,
+    output: (messageContent: string, isFinished: boolean) => boolean,
     options?: PostChatOptions
 ) {
     var systemMessage: Message = {
@@ -54,8 +54,8 @@ export async function postChat(
         const rawData = decoder.decode(value, { stream: true });
         const data =  JSON.parse(rawData)
         messageContent += data.message.content
-        output(messageContent, data.done)
-        if (data.done) {
+        const shouldContinue = output(messageContent, data.done)
+        if (data.done || !shouldContinue) {
             break
         }
     }

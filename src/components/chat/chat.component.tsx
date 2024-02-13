@@ -81,12 +81,13 @@ export const Chat = ({ model }: ChatProps) => {
             try {
                 await postChat(model, messages, ((messageContent, isFinished) => {
                     if (shouldStop) {
-                        return
+                        return false
                     }
 
                     const isPartial = !stopFlag && !isFinished
                     setMessages([...messages, { role: 'assistant', content: messageContent, isPartial: isPartial }])
                     shouldStop = stopFlag
+                    return !shouldStop
                 }), { jsonMode: useJsonMode })
             } catch {
                 setError(true)
