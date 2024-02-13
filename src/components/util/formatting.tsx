@@ -1,6 +1,19 @@
 import reactStringReplace from 'react-string-replace'
+import styled from 'styled-components'
 import { InlineCode } from '../inline-code/inline-code'
 import { CustomCodeBlock } from '../code-block/code-block.component'
+import Markdown from 'react-markdown'
+
+const StyledMarkdown = styled(Markdown)`
+    padding: 0;
+    margin-top: -20px;
+    margin-bottom: -20px;
+    max-width: 800px;
+
+    & img {
+        max-width: 720px;
+    }
+`
 
 export function getCodeLanguage(message: string): string {
     const lowerCased = message.toLocaleLowerCase()
@@ -38,11 +51,6 @@ export function format(message: string): React.ReactNode[] {
         )
     })
 
-    // Then format inline code
-    formattedMessage = reactStringReplace(formattedMessage, /`(.*?)`/, (match) => (
-        <InlineCode>{`${match}`}</InlineCode>
-    ))
-
     // Then format JSON
     formattedMessage = reactStringReplace(formattedMessage, /{([\s\S]*)}/g, (match) => {
         const jsonString = '{'+match.trim()+'}'
@@ -62,11 +70,16 @@ export function format(message: string): React.ReactNode[] {
         )
     })
 
-    // Eveything else as markdown
-    // TODO
-    // formattedMessage = reactStringReplace(formattedMessage, /(.*|\n.)/g, (match) => {
-    //     return <Markdown>{match.split('\n')[0]}</Markdown>
-    // })
+    // Then format markdown
+    formattedMessage = reactStringReplace(formattedMessage, /(.*|\n.)/g, (match) => {
+        return <StyledMarkdown>{match.split('\n')[0]}</StyledMarkdown>
+    })
+
+    // Then format inline code
+    // TODO: - This no longer works because markdown comes first
+    formattedMessage = reactStringReplace(formattedMessage, /`(.*?)`/, (match) => (
+        <InlineCode>{`${match}`}</InlineCode>
+    ))
 
     // Format line breaks
     formattedMessage = reactStringReplace(formattedMessage, '\n', () => <br />)
