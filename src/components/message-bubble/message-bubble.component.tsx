@@ -51,6 +51,7 @@ interface MessageBubbleProps {
 
 export const MessageBubble = ({ message, role, isPartial, isLast, onStopClicked, onRetryClicked }: MessageBubbleProps) => {
     const [showWaitingMessage, setShowWaitingMessage] = useState(false)
+    const [showMarkdown, setShowMarkdown] = useState(true)
     const isAssistant = role === "assistant"
     const messageHasContent = useMemo(() => message.trim() !== '', [message])
 
@@ -71,10 +72,14 @@ export const MessageBubble = ({ message, role, isPartial, isLast, onStopClicked,
         return () => clearTimeout(timeout)
     }, [messageHasContent, setShowWaitingMessage])
 
+    const content = useMemo(() => {
+        return showMarkdown ? format(message) : message
+    }, [message, showMarkdown])
+
     return (
         <Container isAssistant={isAssistant}>
             <Bubble isAssistant={isAssistant}>
-                {isAssistant && !messageHasContent ? <MessageLoading /> : format(message)}
+                {isAssistant && !messageHasContent ? <MessageLoading /> : content}
             </Bubble>
             <FooterContainer>
                 {showWaitingMessage && (
@@ -89,6 +94,7 @@ export const MessageBubble = ({ message, role, isPartial, isLast, onStopClicked,
                 <div />
                 {isAssistant && !isPartial && messageHasContent && isLast && (
                     <ButtonsContainer>
+                        <ActionButton onClick={() => setShowMarkdown(!showMarkdown)}>🖊️</ActionButton>
                         <CopyButton copyText={message} />
                         <ActionButton onClick={onRetryClicked}>🔄</ActionButton>
                     </ButtonsContainer>
